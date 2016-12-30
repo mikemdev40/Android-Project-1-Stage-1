@@ -143,6 +143,10 @@ public class MainActivity extends AppCompatActivity {
 
     private Movie[] parseResults(String stringToParse) throws JSONException {
 
+        if (stringToParse == null || stringToParse.equals("")) {
+            return new Movie[0];
+        }
+
         JSONObject object = new JSONObject(stringToParse);
         JSONArray results = object.getJSONArray("results");
 
@@ -247,7 +251,6 @@ public class MainActivity extends AppCompatActivity {
                 } else if (adapter.getMovieListType() == MovieAdapter.MovieListType.TOP_RATED) {
                     titleText.setText(getResources().getString(R.string.main_screen_title_top_rated));
                 }
-
             } catch (JSONException e) {
                 Log.d(log_tag, "JSON EXCEPTION");
             }

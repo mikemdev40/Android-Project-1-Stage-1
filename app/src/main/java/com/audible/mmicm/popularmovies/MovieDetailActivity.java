@@ -141,6 +141,10 @@ public class MovieDetailActivity extends AppCompatActivity {
 
     private void parseAndUpdateUI(String stringToParse) throws JSONException {
 
+        if (stringToParse == null || stringToParse.equals("")) {
+            return;
+        }
+
         JSONObject object = new JSONObject(stringToParse);
 
         String title;
