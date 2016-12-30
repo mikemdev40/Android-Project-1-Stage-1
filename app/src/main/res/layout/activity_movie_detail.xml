@@ -7,104 +7,103 @@
         xmlns:tools="http://schemas.android.com/tools"
         android:id="@+id/activity_movie_detail"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:layout_marginLeft="15dp"
-        android:layout_marginRight="15dp"
+        android:layout_marginLeft="@dimen/space_large"
+        android:layout_marginRight="@dimen/space_large"
         android:gravity="center">
-        tools:context="com.audible.mmicm.popularmovies.MovieDetailActivity">
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/movieDetailTextViewTitle"
             android:gravity="center"
-            android:textSize="22dp"
-            android:layout_marginTop="15dp"
+            android:textSize="@dimen/text_size_largest"
+            android:layout_marginTop="@dimen/space_large"
             android:textStyle="bold"/>
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/movieDetailTextViewTagline"
             android:gravity="center"
-            android:textSize="18dp"
-            android:layout_marginBottom="10dp"
+            android:textSize="@dimen/text_size_larger"
+            android:layout_marginBottom="@dimen/space_medium"
             android:textStyle="italic"/>
         <ImageView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="10dp"
+            android:layout_marginBottom="@dimen/space_medium"
             android:id="@+id/movieDetailImageView" />
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="16dp"
+            android:textSize="@dimen/text_size_large"
             android:text="@string/movie_detail_overview"
             android:textStyle="bold"/>
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="16dp"
-            android:layout_marginBottom="15dp"
+            android:textSize="@dimen/text_size_large"
+            android:layout_marginBottom="@dimen/space_large"
             android:id="@+id/movieDetailTextViewOverview"/>
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="16dp"
+            android:textSize="@dimen/text_size_large"
             android:text="@string/movie_detail_rating"
             android:textStyle="bold"/>
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="16dp"
-            android:layout_marginBottom="15dp"
+            android:textSize="@dimen/text_size_large"
+            android:layout_marginBottom="@dimen/space_large"
             android:id="@+id/movieDetailTextViewRating" />
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="16dp"
+            android:textSize="@dimen/text_size_large"
             android:text="@string/movie_detail_budget"
             android:textStyle="bold"/>
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="16dp"
-            android:layout_marginBottom="15dp"
+            android:textSize="@dimen/text_size_large"
+            android:layout_marginBottom="@dimen/space_large"
             android:id="@+id/movieDetailTextViewBudget" />
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="16dp"
+            android:textSize="@dimen/text_size_large"
             android:text="@string/movie_detail_release_date"
             android:textStyle="bold"/>
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="16dp"
-            android:layout_marginBottom="15dp"
+            android:textSize="@dimen/text_size_large"
+            android:layout_marginBottom="@dimen/space_large"
             android:id="@+id/movieDetailTextViewReleaseDate" />
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="16dp"
+            android:textSize="@dimen/text_size_large"
             android:text="@string/movie_detail_runtime"
             android:textStyle="bold"/>
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="16dp"
-            android:layout_marginBottom="15dp"
+            android:textSize="@dimen/text_size_large"
+            android:layout_marginBottom="@dimen/space_large"
             android:id="@+id/movieDetailTextViewRuntime" />
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="16dp"
+            android:textSize="@dimen/text_size_large"
             android:text="@string/movie_detail_revenue"
             android:textStyle="bold"/>
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="16dp"
-            android:layout_marginBottom="15dp"
+            android:textSize="@dimen/text_size_large"
+            android:layout_marginBottom="@dimen/space_large"
             android:id="@+id/movieDetailTextViewRevenue" />
     </LinearLayout>
 </ScrollView>

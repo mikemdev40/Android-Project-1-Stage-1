@@ -33,17 +33,29 @@ import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
 
+    private static String SORT_BY = "com.audible.mmicm.sortBy";
     public final static String MOVIE_ID = "com.audible.mmicm.movieID";
 
     private MovieAdapter adapter;
+    private String selectedSort = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        if (savedInstanceState != null) {
+            selectedSort = savedInstanceState.getString(SORT_BY);
+            Log.d("main activity", "!=null" + selectedSort);
+
+        } else {
+            selectedSort = "popular";
+            Log.d("main activity", "==null" + selectedSort);
+        }
+
         setContentView(R.layout.activity_main);
 
         ArrayList<Movie> movies = new ArrayList<Movie>();
-        adapter = new MovieAdapter(this, movies);
+        adapter = new MovieAdapter(this, movies, getSortTypeForString(selectedSort));
         GridView gridView = (GridView) findViewById(R.id.gridview);
         gridView.setAdapter(adapter);
 
@@ -57,8 +69,22 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        //when app first starts, initial sorting is by popularity
-        updateMovies("popular");
+        if (NetworkUtility.isConnected(this)) {
+            updateMovies(selectedSort);
+        } else {
+            Toast.makeText(MainActivity.this, "No Internet! Connect and try again.", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    @Override
+    public void onRestoreInstanceState(Bundle savedInstanceState) {
+        selectedSort = savedInstanceState.getString(SORT_BY);
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        outState.putString(SORT_BY, selectedSort);
+        super.onSaveInstanceState(outState);
     }
 
     @Override
@@ -72,11 +98,13 @@ public class MainActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == R.id.sortByPopularity) {
             adapter.setMovieListType(MovieAdapter.MovieListType.POPULAR);
-            updateMovies("popular");
+            selectedSort = "popular";
+            updateMovies(selectedSort);
             return true;
         } else if (item.getItemId() == R.id.sortByRating) {
             adapter.setMovieListType(MovieAdapter.MovieListType.TOP_RATED);
-            updateMovies("top_rated");
+            selectedSort = "top_rated";
+            updateMovies(selectedSort);
             return true;
         }
         return super.onOptionsItemSelected(item);
@@ -95,12 +123,22 @@ public class MainActivity extends AppCompatActivity {
         builder.appendPath("3");
         builder.appendPath("movie");
         builder.appendPath(sortByValue);
-        builder.appendQueryParameter("api_key","ENTER_YOUR_API_KEY_HERE!");
+        builder.appendQueryParameter("api_key","301995e2246067ea90f17ab07e41cdf6");
         builder.appendQueryParameter("language", "en");
 
         Uri uri = builder.build();
 
         return uri.toString();
+    }
+
+    private MovieAdapter.MovieListType getSortTypeForString(String sortBy) {
+        if (sortBy.equals("popular")) {
+            return MovieAdapter.MovieListType.POPULAR;
+        } else if (sortBy.equals("top_rated")) {
+            return MovieAdapter.MovieListType.TOP_RATED;
+        } else {
+            return null;
+        }
     }
 
     private Movie[] parseResults(String stringToParse) throws JSONException {
@@ -205,9 +243,9 @@ public class MainActivity extends AppCompatActivity {
                 TextView titleText = (TextView) findViewById(R.id.textOverGridview);
 
                 if (adapter.getMovieListType() == MovieAdapter.MovieListType.POPULAR) {
-                    titleText.setText("Showing Most Popular Movies");
+                    titleText.setText(getResources().getString(R.string.main_screen_title_popular));
                 } else if (adapter.getMovieListType() == MovieAdapter.MovieListType.TOP_RATED) {
-                    titleText.setText("Showing Highest Rated Movies");
+                    titleText.setText(getResources().getString(R.string.main_screen_title_top_rated));
                 }
 
             } catch (JSONException e) {

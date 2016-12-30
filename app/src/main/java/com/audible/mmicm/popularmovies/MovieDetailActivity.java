@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.squareup.picasso.Picasso;
 
@@ -36,7 +37,11 @@ public class MovieDetailActivity extends AppCompatActivity {
         Intent intent = getIntent();
         String movieId = intent.getStringExtra(MainActivity.MOVIE_ID);
 
-        updateMovieData(movieId);
+        if (NetworkUtility.isConnected(this)) {
+            updateMovieData(movieId);
+        } else {
+            Toast.makeText(MovieDetailActivity.this, "No Internet! Connect and try again.", Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void updateMovieData(String movieId) {
@@ -52,7 +57,7 @@ public class MovieDetailActivity extends AppCompatActivity {
         builder.appendPath("3");
         builder.appendPath("movie");
         builder.appendPath(movieId);
-        builder.appendQueryParameter("api_key","ENTER_YOUR_API_KEY_HERE!");
+        builder.appendQueryParameter("api_key","301995e2246067ea90f17ab07e41cdf6");
         builder.appendQueryParameter("language", "en");
 
         Uri uri = builder.build();

@@ -10,4 +10,6 @@
     <string name="movie_detail_revenue">Revenue</string>
     <string name="movie_detail_dollars">$ %s</string>
     <string name="movie_detail_minutes">%d minutes</string>
+    <string name="main_screen_title_popular">Showing Most Popular Movies</string>
+    <string name="main_screen_title_top_rated">Showing Highest Rated Movies</string>
 </resources>

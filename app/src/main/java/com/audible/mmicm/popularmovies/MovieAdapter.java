@@ -37,9 +37,9 @@ public class MovieAdapter extends ArrayAdapter<Movie> {
     }
     private MovieListType movieListType;
 
-    public MovieAdapter(Context context, ArrayList<Movie> movies) {
+    public MovieAdapter(Context context, ArrayList<Movie> movies, MovieListType sortByType) {
         super(context, 0, movies);
-        movieListType = MovieListType.POPULAR;  //default value
+        movieListType = sortByType;
     }
 
     public void setMovieListType(MovieListType type) {

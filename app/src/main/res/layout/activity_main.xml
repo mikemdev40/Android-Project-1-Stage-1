@@ -9,19 +9,19 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
-        android:text="Popular Movies"
-        android:textSize="14dp"
+        android:text="@string/app_name"
+        android:textSize="@dimen/text_size_medium"
         android:textStyle="bold"
         android:lines="2"
-        android:background="#FFE5CC"/>
+        android:background="@color/main_text_top_background" />
     <GridView xmlns:android="http://schemas.android.com/apk/res/android"
         android:id="@+id/gridview"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:columnWidth="150dp"
         android:numColumns="auto_fit"
-        android:verticalSpacing="5dp"
-        android:horizontalSpacing="5dp"
+        android:verticalSpacing="@dimen/space_small"
+        android:horizontalSpacing="@dimen/space_small"
         android:stretchMode="columnWidth"
         android:gravity="center" />
 </LinearLayout>
