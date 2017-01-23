@@ -2,6 +2,7 @@
     <string name="app_name">Popular Movies</string>
     <string name="sort_menu_sort_by_popularity">Sort by Popularity</string>
     <string name="sort_menu_sort_by_rating">Sort by User Rating</string>
+    <string name="sort_menu_show_favorites">Show Favorites</string>
     <string name="movie_detail_overview">Overview</string>
     <string name="movie_detail_rating">User Rating</string>
     <string name="movie_detail_budget">Budget</string>
@@ -12,4 +13,5 @@
     <string name="movie_detail_minutes">%d minutes</string>
     <string name="main_screen_title_popular">Showing Most Popular Movies</string>
     <string name="main_screen_title_top_rated">Showing Highest Rated Movies</string>
+    <string name="main_screen_title_favorites">Showing Favorite Movies</string>
 </resources>

@@ -18,5 +18,10 @@
             </intent-filter>
         </activity>
         <activity android:name=".MovieDetailActivity"></activity>
+        <provider android:name=".FavoriteMoviesProvider"
+            android:authorities="com.android.popularmovies.app.moviesprovider"
+            android:enabled="true"
+            android:exported="true" >
+        </provider>
     </application>
 </manifest>

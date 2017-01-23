@@ -1,12 +1,17 @@
 package com.audible.mmicm.popularmovies;
 
+import android.content.ContentValues;
 import android.content.Intent;
 import android.content.res.Resources;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -29,19 +34,99 @@ import java.util.Locale;
 
 public class MovieDetailActivity extends AppCompatActivity {
 
+    private MovieDetailsDatabaseHelper databaseHelper;
+    private Button favoritesButton;
+
+    private String movieId;
+    private String title;
+    private String tagline;
+    private String imageUrl;
+    private String overview;
+    private Double rating;
+    private Integer budget;
+    private String releaseDate;
+    private Integer runtime;
+    private Integer revenue;
+
+    private Integer favoriteId = -1;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_movie_detail);
 
         Intent intent = getIntent();
-        String movieId = intent.getStringExtra(MainActivity.MOVIE_ID);
+        movieId = intent.getStringExtra(MainActivity.MOVIE_ID);
+        favoritesButton = (Button) findViewById(R.id.movieDetailFavoriteButton);
+        favoritesButton.setEnabled(false);
+
+        databaseHelper = new MovieDetailsDatabaseHelper(this);
+        SQLiteDatabase database = databaseHelper.getReadableDatabase();
 
         if (NetworkUtility.isConnected(this)) {
             updateMovieData(movieId);
         } else {
             Toast.makeText(MovieDetailActivity.this, "No Internet! Connect and try again.", Toast.LENGTH_SHORT).show();
         }
+    }
+
+    private void updateFavoriteButton() {
+        if (loadFavoriteStatus()) {
+            favoritesButton.setText("Remove from favorites");
+            favoritesButton.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View view) {
+                    removeFromFavorites();
+                }
+            });
+        } else {
+            favoritesButton.setText("Add to favorites");
+            favoritesButton.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View view) {
+                    saveToFavorites();
+                }
+            });
+        }
+    }
+
+    private boolean loadFavoriteStatus() {
+        String selection = MovieDetailsDatabaseHelper.MovieDetail.COLUMN_MOVIE_ID + " = ?";
+        String[] selectionArgs = {movieId};
+        String[] projection = {
+                MovieDetailsDatabaseHelper.MovieDetail.COLUMN_MOVIE_ID
+        };
+        Cursor cursor = getContentResolver().query(
+                FavoriteMoviesProvider.CONTENT_URI,
+                projection,
+                selection,
+                selectionArgs,
+                null
+        );
+        if (null != cursor && cursor.getCount() > 0) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    private void saveToFavorites() {
+        ContentValues valuesToSave = new ContentValues();
+        valuesToSave.put(MovieDetailsDatabaseHelper.MovieDetail.COLUMN_MOVIE_ID, movieId);
+        valuesToSave.put(MovieDetailsDatabaseHelper.MovieDetail.COLUMN_MOVIE_TITLE, title);
+        valuesToSave.put(MovieDetailsDatabaseHelper.MovieDetail.COLUMN_MOVIE_IMAGEURL, getImageFromUrl(imageUrl));
+        Uri response = getContentResolver().insert(FavoriteMoviesProvider.CONTENT_URI, valuesToSave);
+        updateFavoriteButton();
+    }
+
+    private void removeFromFavorites() {
+        String selection = MovieDetailsDatabaseHelper.MovieDetail.COLUMN_MOVIE_ID + " = ?";
+        String[] selectionArgs = {movieId};
+        getContentResolver().delete(FavoriteMoviesProvider.CONTENT_URI, selection, selectionArgs);
+        updateFavoriteButton();
+    }
+
+    private String getImageFromUrl(String imageUrl) {
+        //we want to load smaller images in the main view, so save the URL to the smaller version
+        return imageUrl.replaceAll("w780", "w342");
     }
 
     private void updateMovieData(String movieId) {
@@ -147,16 +232,6 @@ public class MovieDetailActivity extends AppCompatActivity {
 
         JSONObject object = new JSONObject(stringToParse);
 
-        String title;
-        String tagline;
-        String imageUrl;
-        String overview;
-        Double rating;
-        Integer budget;
-        String releaseDate;
-        Integer runtime;
-        Integer revenue;
-
         title = object.getString("original_title");
         tagline = object.getString("tagline");
         imageUrl = getImageUrl(object.getString("poster_path"));
@@ -201,5 +276,8 @@ public class MovieDetailActivity extends AppCompatActivity {
         TextView revenueText = (TextView) findViewById(R.id.movieDetailTextViewRevenue);
         String revenueString = String.format(res.getString(R.string.movie_detail_dollars), NumberFormat.getIntegerInstance().format(revenue));
         revenueText.setText(revenueString);
+
+        favoritesButton.setEnabled(true);
+        updateFavoriteButton();
     }
 }

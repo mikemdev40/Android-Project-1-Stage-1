@@ -1,10 +1,15 @@
 package com.audible.mmicm.popularmovies;
 
+import android.content.ContentResolver;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.preference.PreferenceManager;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -20,24 +25,25 @@ import android.widget.Toast;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.w3c.dom.Text;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.lang.reflect.Array;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
 
     private static String SORT_BY = "com.audible.mmicm.sortBy";
     public final static String MOVIE_ID = "com.audible.mmicm.movieID";
 
     private MovieAdapter adapter;
+    private MovieCursorAdapter cursorAdapter;
+
     private String selectedSort = "";
+    private GridView gridView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,32 +51,19 @@ public class MainActivity extends AppCompatActivity {
 
         if (savedInstanceState != null) {
             selectedSort = savedInstanceState.getString(SORT_BY);
-            Log.d("main activity", "!=null" + selectedSort);
-
         } else {
-            selectedSort = "popular";
-            Log.d("main activity", "==null" + selectedSort);
+            selectedSort = "popular";  // default/initial sort
         }
 
         setContentView(R.layout.activity_main);
+        getSupportLoaderManager().initLoader(0, null, this);
+        cursorAdapter = new MovieCursorAdapter(this, null, 0);
 
         ArrayList<Movie> movies = new ArrayList<Movie>();
         adapter = new MovieAdapter(this, movies, getSortTypeForString(selectedSort));
-        GridView gridView = (GridView) findViewById(R.id.gridview);
-        gridView.setAdapter(adapter);
-
-        gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Movie selectedMovie = adapter.getItem(position);
-                Intent movieDetailIntent = new Intent(MainActivity.this, MovieDetailActivity.class);
-                movieDetailIntent.putExtra(MOVIE_ID, selectedMovie.id);
-                startActivity(movieDetailIntent);
-            }
-        });
 
         if (NetworkUtility.isConnected(this)) {
-            updateMovies(selectedSort);
+            loadMovies(selectedSort);
         } else {
             Toast.makeText(MainActivity.this, "No Internet! Connect and try again.", Toast.LENGTH_SHORT).show();
         }
@@ -98,16 +91,101 @@ public class MainActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == R.id.sortByPopularity) {
             adapter.setMovieListType(MovieAdapter.MovieListType.POPULAR);
+            showSorted();
             selectedSort = "popular";
             updateMovies(selectedSort);
             return true;
         } else if (item.getItemId() == R.id.sortByRating) {
             adapter.setMovieListType(MovieAdapter.MovieListType.TOP_RATED);
+            showSorted();
             selectedSort = "top_rated";
             updateMovies(selectedSort);
             return true;
+        } else if (item.getItemId() == R.id.showFavorites) {
+            showSavedFavorites();
+            selectedSort = "favorites";
+            return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+
+        Log.d(this.getClass().getSimpleName(), "on Create Loader");
+        String[] projection = {
+                MovieDetailsDatabaseHelper.MovieDetail._ID,
+                MovieDetailsDatabaseHelper.MovieDetail.COLUMN_MOVIE_ID,
+                MovieDetailsDatabaseHelper.MovieDetail.COLUMN_MOVIE_TITLE,
+                MovieDetailsDatabaseHelper.MovieDetail.COLUMN_MOVIE_IMAGEURL
+        };
+
+        return new CursorLoader(this,
+                FavoriteMoviesProvider.CONTENT_URI,
+                projection,
+                null,
+                null,
+                null
+        );
+    }
+
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
+        cursorAdapter.swapCursor(cursor);
+    }
+
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) {
+        cursorAdapter.swapCursor(null);
+        Log.d(this.getClass().getSimpleName(), "onLoaderReset");
+    }
+
+    private void loadMovies(String selectedSort) {
+        if (selectedSort.equals("popular")) {
+            adapter.setMovieListType(MovieAdapter.MovieListType.POPULAR);
+            showSorted();
+            updateMovies(selectedSort);
+        } else if (selectedSort.equals("top_rated")) {
+            adapter.setMovieListType(MovieAdapter.MovieListType.TOP_RATED);
+            showSorted();
+            updateMovies(selectedSort);
+        } else if (selectedSort.equals("favorites")) {
+            showSavedFavorites();
+        }
+    }
+
+    private void showSorted() {
+        gridView = (GridView) findViewById(R.id.gridview);
+        gridView.setAdapter(adapter);
+
+        gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Movie selectedMovie = adapter.getItem(position);
+                Intent movieDetailIntent = new Intent(MainActivity.this, MovieDetailActivity.class);
+                movieDetailIntent.putExtra(MOVIE_ID, selectedMovie.id);
+                startActivity(movieDetailIntent);
+            }
+        });
+    }
+
+    private void showSavedFavorites() {
+        gridView = (GridView) findViewById(R.id.gridview);
+        gridView.setAdapter(cursorAdapter);
+
+        gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+
+                Cursor cursor = (Cursor) parent.getItemAtPosition(position);
+                String movieId = cursor.getString(cursor.getColumnIndexOrThrow(MovieDetailsDatabaseHelper.MovieDetail.COLUMN_MOVIE_ID));
+                Intent movieDetailIntent = new Intent(MainActivity.this, MovieDetailActivity.class);
+                movieDetailIntent.putExtra(MOVIE_ID, movieId);
+                startActivity(movieDetailIntent);
+            }
+        });
+        TextView titleText = (TextView) findViewById(R.id.textOverGridview);
+        titleText.setText(getResources().getString(R.string.main_screen_title_favorites));
     }
 
     private void updateMovies(String sortByValue) {
@@ -137,7 +215,7 @@ public class MainActivity extends AppCompatActivity {
         } else if (sortBy.equals("top_rated")) {
             return MovieAdapter.MovieListType.TOP_RATED;
         } else {
-            return null;
+            return MovieAdapter.MovieListType.POPULAR;  //default, or in case of favorites
         }
     }
 

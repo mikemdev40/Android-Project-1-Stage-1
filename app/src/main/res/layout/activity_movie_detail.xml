@@ -33,6 +33,10 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="@dimen/space_medium"
             android:id="@+id/movieDetailImageView" />
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/movieDetailFavoriteButton" />
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

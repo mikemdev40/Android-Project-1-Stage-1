@@ -4,4 +4,6 @@
         android:title="@string/sort_menu_sort_by_popularity" />
     <item android:id="@+id/sortByRating"
         android:title="@string/sort_menu_sort_by_rating" />
+    <item android:id="@+id/showFavorites"
+        android:title="@string/sort_menu_show_favorites" />
 </menu>
