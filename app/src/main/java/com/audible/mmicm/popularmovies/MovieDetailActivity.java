@@ -5,14 +5,19 @@ import android.content.Intent;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutCompat;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -27,9 +32,11 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.lang.reflect.Array;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.NumberFormat;
+import java.util.ArrayList;
 import java.util.Locale;
 
 public class MovieDetailActivity extends AppCompatActivity {
@@ -48,7 +55,13 @@ public class MovieDetailActivity extends AppCompatActivity {
     private Integer runtime;
     private Integer revenue;
 
-    private Integer favoriteId = -1;
+    private final static String MOVIE_DETAILS = "details";
+    private final static String MOVIE_REVIEWS = "reviews";
+    private final static String MOVIE_TRAILERS = "videos";
+
+    public static final String TRAILER_URL = "com.audible.mmicm.trailerUrl";
+
+    private ArrayList<String> trailerUrlIds = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,6 +78,8 @@ public class MovieDetailActivity extends AppCompatActivity {
 
         if (NetworkUtility.isConnected(this)) {
             updateMovieData(movieId);
+            updateMovieTrailers(movieId);
+            updateMovieReviews(movieId);
         } else {
             Toast.makeText(MovieDetailActivity.this, "No Internet! Connect and try again.", Toast.LENGTH_SHORT).show();
         }
@@ -131,17 +146,32 @@ public class MovieDetailActivity extends AppCompatActivity {
 
     private void updateMovieData(String movieId) {
         DownloadMovieInfoDataTask task = new DownloadMovieInfoDataTask();
-        String urlString = getURL(movieId);
-        task.execute(urlString);
+        String urlString = getURL(movieId, null);  //to get movie details, we don't append anything
+        task.execute(urlString, MOVIE_DETAILS);
     }
 
-    private String getURL(String movieId) {
+    private void updateMovieTrailers(String movieId) {
+        DownloadMovieInfoDataTask task = new DownloadMovieInfoDataTask();
+        String urlString = getURL(movieId, MOVIE_TRAILERS);
+        task.execute(urlString, MOVIE_TRAILERS);
+    }
+
+    private void updateMovieReviews(String movieId) {
+        DownloadMovieInfoDataTask task = new DownloadMovieInfoDataTask();
+        String urlString = getURL(movieId, MOVIE_REVIEWS);
+        task.execute(urlString, MOVIE_REVIEWS);
+    }
+
+    private String getURL(String movieId, String extra) {
         Uri.Builder builder = new Uri.Builder();
         builder.scheme("https");
         builder.authority("api.themoviedb.org");
         builder.appendPath("3");
         builder.appendPath("movie");
         builder.appendPath(movieId);
+        if (extra != null && !extra.isEmpty()) {
+            builder.appendPath(extra);
+        }
         builder.appendQueryParameter("api_key","301995e2246067ea90f17ab07e41cdf6");
         builder.appendQueryParameter("language", "en");
 
@@ -165,10 +195,11 @@ public class MovieDetailActivity extends AppCompatActivity {
         return uri.toString();
     }
 
-    private class DownloadMovieInfoDataTask extends AsyncTask<String, Void, String> {
+    private class DownloadMovieInfoDataTask extends AsyncTask<String, Void, String[]> {
         private final String log_tag = DownloadMovieInfoDataTask.class.getSimpleName();
+        private String downloadString = "";
 
-        protected String doInBackground(String... urls) {
+        protected String[] doInBackground(String... urls) {
 
             HttpURLConnection urlConnection = null;
             BufferedReader reader = null;
@@ -176,6 +207,7 @@ public class MovieDetailActivity extends AppCompatActivity {
 
             try {
                 URL url = new URL(urls[0]);
+                downloadString = urls[1];
                 urlConnection = (HttpURLConnection) url.openConnection();
                 urlConnection.setRequestMethod("GET");
                 urlConnection.connect();
@@ -198,7 +230,8 @@ public class MovieDetailActivity extends AppCompatActivity {
                     return null;
                 }
                 movieString = buffer.toString();
-                return movieString;
+                String[] returnArray = {movieString, downloadString};
+                return returnArray;
             } catch (IOException e) {
                 Log.e(log_tag, "Error ", e);
                 return null;
@@ -215,16 +248,35 @@ public class MovieDetailActivity extends AppCompatActivity {
                 }
             }
         }
-        protected void onPostExecute(String result) {
+        protected void onPostExecute(String[] result) {
             try {
-                parseAndUpdateUI(result);
+                String dataToParse = result[0];
+                String dataType = result[1];
+
+                switch (dataType) {
+                    case MOVIE_DETAILS: {
+                        parseAndUpdateDetailsUI(dataToParse);
+                        break;
+                    }
+                    case MOVIE_TRAILERS: {
+                        parseAndUpdateTrailersUI(dataToParse);
+                        break;
+                    }
+                    case MOVIE_REVIEWS: {
+                        parseAndUpdateReviewsUI(dataToParse);
+                        break;
+                    }
+                    default: {
+                        break;
+                    }
+                }
             } catch (JSONException e) {
                 Log.d(log_tag, "JSON EXCEPTION");
             }
         }
     }
 
-    private void parseAndUpdateUI(String stringToParse) throws JSONException {
+    private void parseAndUpdateDetailsUI(String stringToParse) throws JSONException {
 
         if (stringToParse == null || stringToParse.equals("")) {
             return;
@@ -279,5 +331,126 @@ public class MovieDetailActivity extends AppCompatActivity {
 
         favoritesButton.setEnabled(true);
         updateFavoriteButton();
+    }
+
+    private void parseAndUpdateTrailersUI(String stringToParse) throws JSONException {
+
+        if (stringToParse == null || stringToParse.equals("")) {
+            return;
+        }
+
+        //get trailer info from JSON response
+        JSONObject object = new JSONObject(stringToParse);
+        JSONArray results = object.getJSONArray("results");
+        int numTrailers = results.length();
+
+        //set the number of trailers to a maximum of 3
+        numTrailers = Math.min(numTrailers, 3);
+
+        if (numTrailers > 0) {
+
+            LinearLayout trailerSectionLayout = (LinearLayout)findViewById(R.id.trailersLayout);
+
+            //for each trailer...
+            for (int i = 0; i < numTrailers; i++) {
+
+                //get youtube trailer id, turn it into a url, and add it to trailer urls array
+                JSONObject trailerInfo = results.getJSONObject(i);
+                String trailerId = trailerInfo.getString("key");
+                trailerUrlIds.add(trailerId);
+
+                //create a linear layout with a button to play trailer and textfield
+                LinearLayout trailerContainer = new LinearLayout(this);
+                LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT);
+                params.gravity = Gravity.CENTER;
+                trailerContainer.setLayoutParams(params);
+
+                ImageButton trailerButton = new ImageButton(this);
+                trailerButton.setImageResource(R.drawable.play_button);
+                final int trailerIndex = i;
+                trailerButton.setOnClickListener(new View.OnClickListener() {
+                    //set button action to open specific trailer at index
+                    public void onClick(View view) {
+                        openTrailerAtIndex(trailerIndex);
+                    }
+                });
+                trailerContainer.addView(trailerButton);
+
+                TextView trailerText = new TextView(this);
+                LinearLayout.LayoutParams textParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+                textParams.gravity = Gravity.CENTER;
+                trailerText.setLayoutParams(textParams);
+                trailerText.setText("  Play Trailer #" + Integer.toString(i + 1));
+                trailerContainer.addView(trailerText);
+
+                //add the layout with button and textfield to the parent section layout
+                trailerSectionLayout.addView(trailerContainer);
+            }
+        } else {
+            //update text of header to reflect no trailers (override default "Trailers" text)
+            TextView trailerSectionHeaderText = (TextView)findViewById(R.id.movieDetailTrailerHeaderText);
+            trailerSectionHeaderText.setText(R.string.movie_detail_trailer_header_empty);
+        }
+    }
+
+    private void openTrailerAtIndex(int trailerIndex) {
+        if (trailerIndex >= trailerUrlIds.size()) {
+            return;
+        }
+
+        String trailerUrlId = trailerUrlIds.get(trailerIndex);
+        Intent trailerIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://www.youtube.com/watch?v=" + trailerUrlId));
+        startActivity(trailerIntent);
+    }
+
+    private void parseAndUpdateReviewsUI(String stringToParse) throws JSONException {
+
+        if (stringToParse == null || stringToParse.equals("")) {
+            return;
+        }
+
+        //get reviews from JSON response
+        JSONObject object = new JSONObject(stringToParse);
+        JSONArray results = object.getJSONArray("results");
+        int numReviews = results.length();
+
+        //set the number of reviews to a maximum of 5
+        numReviews = Math.min(numReviews, 5);
+
+        if (numReviews > 0) {
+
+            LinearLayout reviewSectionLayout = (LinearLayout)findViewById(R.id.reviewsLayout);
+
+            //for each review...
+            for (int i = 0; i < numReviews; i++) {
+
+                //get youtube trailer id, turn it into a url, and add it to trailer urls array
+                JSONObject reviewInfo = results.getJSONObject(i);
+                String review = reviewInfo.getString("content");
+                String author = reviewInfo.getString("author");
+
+                //create a linear layout with a button to play trailer and textfield
+                LinearLayout.LayoutParams textParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+                textParams.gravity = Gravity.LEFT;
+
+                TextView authorText = new TextView(this);
+                Typeface authorType = Typeface.create("sans-serif", Typeface.BOLD);
+                authorText.setTypeface(authorType);
+                authorText.setLayoutParams(textParams);
+                authorText.setText("Written by " + author + ":");
+
+                TextView reviewText = new TextView(this);
+                reviewText.setLayoutParams(textParams);
+                reviewText.setText(review + "\n\n");
+
+                //add the layout with button and textfield to the parent section layout
+                reviewSectionLayout.addView(authorText);
+                reviewSectionLayout.addView(reviewText);
+            }
+        } else {
+            //update text of header to reflect no reviews (override default "Reviews" text)
+            TextView reviewSectionHeaderText = (TextView)findViewById(R.id.movieDetailReviewHeaderText);
+            reviewSectionHeaderText.setText(R.string.movie_detail_review_header_empty);
+        }
     }
 }

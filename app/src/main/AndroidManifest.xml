@@ -14,14 +14,18 @@
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".MovieDetailActivity"></activity>
-        <provider android:name=".FavoriteMoviesProvider"
+        <activity android:name=".MovieDetailActivity" />
+
+        <provider
+            android:name=".FavoriteMoviesProvider"
             android:authorities="com.android.popularmovies.app.moviesprovider"
             android:enabled="true"
-            android:exported="true" >
-        </provider>
+            android:exported="true"></provider>
+
     </application>
+
 </manifest>

@@ -11,6 +11,10 @@
     <string name="movie_detail_revenue">Revenue</string>
     <string name="movie_detail_dollars">$ %s</string>
     <string name="movie_detail_minutes">%d minutes</string>
+    <string name="movie_detail_trailer_header">Trailers</string>
+    <string name="movie_detail_trailer_header_empty">No trailers for this movie</string>
+    <string name="movie_detail_review_header">Reviews</string>
+    <string name="movie_detail_review_header_empty">No reviews for this movie</string>
     <string name="main_screen_title_popular">Showing Most Popular Movies</string>
     <string name="main_screen_title_top_rated">Showing Highest Rated Movies</string>
     <string name="main_screen_title_favorites">Showing Favorite Movies</string>
