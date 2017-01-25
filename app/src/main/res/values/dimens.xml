@@ -10,4 +10,5 @@
     <dimen name="space_small">5dp</dimen>
     <dimen name="space_medium">10dp</dimen>
     <dimen name="space_large">15dp</dimen>
+    <dimen name="space_largest">20dp</dimen>
 </resources>

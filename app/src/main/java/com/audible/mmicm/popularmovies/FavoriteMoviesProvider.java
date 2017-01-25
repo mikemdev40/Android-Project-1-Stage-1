@@ -60,7 +60,6 @@ public class FavoriteMoviesProvider extends ContentProvider {
 
         switch (matcher.match(uri)) {
             case ALL_MOVIES: {
-                Log.d(this.getClass().toString(), "query all movies");
                 returnCursor = database.query(
                         MovieDetailsDatabaseHelper.MOVIE_TABLE,
                         projection,
@@ -75,7 +74,6 @@ public class FavoriteMoviesProvider extends ContentProvider {
             default:
                 throw new UnsupportedOperationException("Unknown URI: " + uri);
         }
-        Log.d(this.getClass().toString(), "query complete");
         returnCursor.setNotificationUri(getContext().getContentResolver(), uri);
         return returnCursor;
     }
@@ -89,7 +87,6 @@ public class FavoriteMoviesProvider extends ContentProvider {
 
         switch (match) {
             case ALL_MOVIES:
-                Log.d(this.getClass().toString(), "insert all movies");
                 long _id = database.insert(MovieDetailsDatabaseHelper.MOVIE_TABLE, null, values);
                 if ( _id > 0 )
                     returnUri = ContentUris.withAppendedId(CONTENT_URI, _id);
@@ -99,7 +96,6 @@ public class FavoriteMoviesProvider extends ContentProvider {
             default:
                 throw new UnsupportedOperationException("Unknown URI: " + uri);
         }
-        Log.d(this.getClass().toString(), "insert complete");
         getContext().getContentResolver().notifyChange(uri, null);
         return returnUri;
     }
@@ -117,7 +113,6 @@ public class FavoriteMoviesProvider extends ContentProvider {
             default:
                 throw new UnsupportedOperationException("Unknown URI: " + uri);
         }
-        Log.d(this.getClass().toString(), "delete complete");
         getContext().getContentResolver().notifyChange(uri, null);
         return rowsDeleted;
     }
@@ -135,7 +130,6 @@ public class FavoriteMoviesProvider extends ContentProvider {
             default:
                 throw new UnsupportedOperationException("Unknown URI: " + uri);
         }
-        Log.d(this.getClass().toString(), "update complete");
         getContext().getContentResolver().notifyChange(uri, null);
         return rowsUpdated;
     }

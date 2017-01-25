@@ -18,4 +18,5 @@
     <string name="main_screen_title_popular">Showing Most Popular Movies</string>
     <string name="main_screen_title_top_rated">Showing Highest Rated Movies</string>
     <string name="main_screen_title_favorites">Showing Favorite Movies</string>
+    <string name="no_movie_selected_text">Welcome to Popular Movies! Please choose a movie to view details.</string>
 </resources>

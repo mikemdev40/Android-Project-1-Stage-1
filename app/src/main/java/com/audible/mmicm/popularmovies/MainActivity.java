@@ -1,12 +1,10 @@
 package com.audible.mmicm.popularmovies;
 
-import android.content.ContentResolver;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
-import android.preference.PreferenceManager;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
@@ -45,17 +43,29 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     private String selectedSort = "";
     private GridView gridView;
 
+    private boolean dualPane = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        if (findViewById(R.id.detail_fragment_container_dual) != null) {
+            dualPane = true;
+        }
 
         if (savedInstanceState != null) {
             selectedSort = savedInstanceState.getString(SORT_BY);
         } else {
             selectedSort = "popular";  // default/initial sort
+
+            //show welcome text on startup
+            if (dualPane) {
+                NoMovieSelectedFragment fragment = new NoMovieSelectedFragment();
+                getSupportFragmentManager().beginTransaction().add(R.id.detail_fragment_container_dual, fragment).commit();
+            }
         }
 
-        setContentView(R.layout.activity_main);
         getSupportLoaderManager().initLoader(0, null, this);
         cursorAdapter = new MovieCursorAdapter(this, null, 0);
 
@@ -162,9 +172,10 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Movie selectedMovie = adapter.getItem(position);
-                Intent movieDetailIntent = new Intent(MainActivity.this, MovieDetailActivity.class);
-                movieDetailIntent.putExtra(MOVIE_ID, selectedMovie.id);
-                startActivity(movieDetailIntent);
+                if (selectedMovie == null) {
+                    return;
+                }
+                openMovieDetailsForMovieId(selectedMovie.id);
             }
         });
     }
@@ -176,16 +187,27 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-
                 Cursor cursor = (Cursor) parent.getItemAtPosition(position);
                 String movieId = cursor.getString(cursor.getColumnIndexOrThrow(MovieDetailsDatabaseHelper.MovieDetail.COLUMN_MOVIE_ID));
-                Intent movieDetailIntent = new Intent(MainActivity.this, MovieDetailActivity.class);
-                movieDetailIntent.putExtra(MOVIE_ID, movieId);
-                startActivity(movieDetailIntent);
+                openMovieDetailsForMovieId(movieId);
             }
         });
         TextView titleText = (TextView) findViewById(R.id.textOverGridview);
         titleText.setText(getResources().getString(R.string.main_screen_title_favorites));
+    }
+
+    private void openMovieDetailsForMovieId(String movieIdToShow) {
+        if (dualPane) {
+            MovieDetailFragment fragment = MovieDetailFragment.newInstance(movieIdToShow);
+            FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+            transaction.replace(R.id.detail_fragment_container_dual, fragment);
+            transaction.addToBackStack(null);
+            transaction.commit();
+        } else {
+            Intent movieDetailIntent = new Intent(MainActivity.this, MovieDetailActivity.class);
+            movieDetailIntent.putExtra(MOVIE_ID, movieIdToShow);
+            startActivity(movieDetailIntent);
+        }
     }
 
     private void updateMovies(String sortByValue) {
